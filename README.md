@@ -64,31 +64,47 @@ flowchart LR
 
 **사전 요구사항**: Ubuntu 22.04, 32C/128GB 이상 (nested virtualization 권장), SSH 접근, sudo 권한
 
+`make help`로 사용 가능한 명령 목록을 볼 수 있습니다.
+
 ```bash
-# 1) 호스트에 libvirt 설치 + NAT 네트워크 생성
+# 1) 호스트에 libvirt 설치 + cledyubr0 NAT 네트워크 생성
 make host-prep HOST=<호스트-IP>
 
-# 2) Terraform으로 VM 3대 프로비저닝 (libvirt provider)
+# 2) Terraform으로 VM 3대(cp01/cp02/cp03) 프로비저닝
+make kvm-init
 make kvm-apply
 
-# 3) kubeadm HA 클러스터 부트스트랩
+# 3) VM에 containerd/kubeadm/kubelet 사전 설치
+make vm-prep
+
+# 4) kube-vip + kubeadm HA 컨트롤플레인 부트스트랩
 make k8s-bootstrap
 
-# 4) Cilium, MetalLB, Longhorn 설치
+# 5) Cilium → MetalLB → Longhorn 설치
 make platform-up
 
-# 5) Tailscale subnet router 설치
+# 6) cert-manager 설치 + 내부 CA 생성
+make cert-manager-up
+
+# 7) Tailscale subnet router 설치
 make tailscale-up AUTHKEY=tskey-auth-...
 
-# 6) Argo CD 설치 + 루트 App-of-Apps 동기화
+# 8) Argo CD 설치 + 루트 App-of-Apps 적용
 make argocd-up
 
-# 7) [확인 필요] cert-manager, Keycloak, 로컬 DNS, 클라이언트 신뢰, API 서버 OIDC
-#    ansible/playbooks/31, 70, 80, 81, 82 단계에 해당하는 make 타겟 또는 ansible-playbook 명령
+# 9) Vault 설정 → Keycloak 기반 설치
+make vault-bootstrap-configure
+make keycloak-foundation-up
+
+# 10) 클라이언트에 루트 CA 신뢰 설치
+make client-trust-up
 ```
 
-- **확인**: `kubectl get nodes`로 노드 3대가 Ready인지, Argo CD에서 앱이 Synced인지 확인합니다.
-- 단계별 설명은 [`docs/architecture/phases.md`](docs/architecture/phases.md), 네트워크 설계는 [`docs/architecture/network.md`](docs/architecture/network.md)를 참고하세요.
+**확인**: `kubectl get nodes`에서 노드 3대가 Ready인지 확인하고, `make argocd-url`로 Argo CD 주소를, `make argocd-password`로 초기 비밀번호를 얻어 로그인한 뒤 앱이 Synced인지 봅니다.
+
+**정리**: `make kvm-destroy` (VM 3대가 모두 삭제되니 주의하세요)
+
+구축 순서의 배경은 [`docs/architecture/phases.md`](docs/architecture/phases.md), 네트워크 설계는 [`docs/architecture/network.md`](docs/architecture/network.md)를 참고하세요.
 
 ## 관측성
 
