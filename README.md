@@ -87,8 +87,7 @@ make argocd-up
 #    ansible/playbooks/31, 70, 80, 81, 82 단계에 해당하는 make 타겟 또는 ansible-playbook 명령
 ```
 
-- **확인**: `kubectl get nodes`로 노드 3대가 Ready인지, Argo CD에서 앱이 Synced인지 확인합니다. [확인 필요: 기대 앱 개수]
-- **정리**: [확인 필요: 정리 명령]
+- **확인**: `kubectl get nodes`로 노드 3대가 Ready인지, Argo CD에서 앱이 Synced인지 확인합니다.
 - 단계별 설명은 [`docs/architecture/phases.md`](docs/architecture/phases.md), 네트워크 설계는 [`docs/architecture/network.md`](docs/architecture/network.md)를 참고하세요.
 
 ## 관측성
